@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 class MemberRepositoryTest {
 
     @Autowired
-    MemberRepository memberRepository;
+    PracticeMemberRepository memberRepository;
 
     @Test
     @Transactional
@@ -19,14 +19,14 @@ class MemberRepositoryTest {
     public void testMember() throws Exception{
 
         //given
-        MemberTest member = new MemberTest();
+        PracticeMember member = new PracticeMember();
         member.setName("hwang");
 
         //when
         Long save = memberRepository.save(member);
 
         //then
-        MemberTest byId = memberRepository.findById(save);
+        PracticeMember byId = memberRepository.findById(save);
 
         org.assertj.core.api.Assertions.assertThat(member).isSameAs(byId);
 

@@ -1,10 +1,8 @@
 package jpabook.jpashop.domain;
 
 import jakarta.persistence.*;
-import jpabook.jpashop.MemberTest;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.ObjectProvider;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

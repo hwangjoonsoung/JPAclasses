@@ -49,3 +49,41 @@ trouble shutting
 - 적용 2단계
   - 논리명 생성 : 명시적으로 컬럼, 테이블 명을 직접 적지 않으면 ImplicitNamingStrategy생성
   - 물리명 적용 : 모든 논리명에 적용 됨, 실제 테이블에 적용
+
+### JOQL 과 SQL의 차이
+- 기능적으로는 동일하지만 쿼리하는 대상이 다름
+- JPQL의 경우 Entity 대상으로 하기 때문에 alias를 사용해야 한다
+  - JPQL : select m from member m;
+  - SQL : select * from member;
+
+### Annotation 우선순위
+1. method 상단
+2. class
+
+### EntityManager DI
+- EntityManager를 DI할때 @PersistenceContext(표준임)를 사용해야 한다.
+- 근데 spring boot가 @AutoWired로 DI가 될 수 있도록 개선되었다.
+- 따라서 생성자 주입을 사용할 수 있다.
+
+### Test Case에서 rollback
+- @Tranctional한 상황에서 Test Case를 작성하여 동작하면 DB에 commit되지 않는다.
+  - Test Case에서는 Commit할 필요가 없음으로 자동으로 RollBack해준다.
+- 따라서 insert query또한 생성되지 않는다.
+- 만약 insert query 를 날라고 Roll Back을 하고싶은 경우
+  - EntityManeger의 flash함수를 이용해서 insert query를 날리도록 한다.
+- 이렇게 되면 자동적으로 transectional한 상황에서 insert query는 날라가지만 rool back이 되는 상황으로 만들어 진다
+```java
+    @Test
+        public void 회원가입() throws Exception{
+
+        //given
+        Member member = new Member();
+        member.setName("hwang");
+        //when
+        Long joinedId = memberService.join(member);
+        em.flush();
+
+        //then
+        Assertions.assertEquals(member , memberRepository.findOne(joinedId));
+        }
+```
