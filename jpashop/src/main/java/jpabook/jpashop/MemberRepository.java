@@ -4,21 +4,19 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.plaf.metal.MetalMenuBarUI;
-
 @Repository
 public class MemberRepository {
 
     @PersistenceContext
     private EntityManager em;
 
-    public Long save(Member member){
+    public Long save(MemberTest member){
         em.persist(member);
         return  member.getId();
     }
 
-    public Member findById(long id){
-        return em.find(Member.class, id);
+    public MemberTest findById(long id){
+        return em.find(MemberTest.class, id);
     }
 
 }

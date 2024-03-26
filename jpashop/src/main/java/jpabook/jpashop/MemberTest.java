@@ -1,17 +1,14 @@
 package jpabook.jpashop;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.SecondaryTables;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.web.bind.annotation.GetMapping;
 
-@Entity
+//@Entity
 @Getter
 @Setter
-public class Member {
+public class MemberTest {
 
     @Id
     @GeneratedValue
