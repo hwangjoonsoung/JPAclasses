@@ -87,3 +87,29 @@ trouble shutting
         Assertions.assertEquals(member , memberRepository.findOne(joinedId));
         }
 ```
+### 와 persist를 한번만 날릴까?
+```java
+    @Transactional
+    public Long order(Long memberId , Long itemId , int count) {
+        Member member = memberRepository.findOne(memberId);
+        Item item = itemRepository.findOne(itemId);
+
+        //배송정보 생성
+        Delivery delivery = new Delivery();
+        delivery.setAddress(member.getAddress());
+
+        //주문 상품 생성
+        OrderItem orderItem = OrderItem.createOrderItem(item, item.getPrice(), count);
+        Order order = Order.createOrder(member, delivery, orderItem);
+        orderRepository.save(order);
+        return order.getId();
+    }
+```
+- 위 코드를 보면 delivery와 orderItem을 persist한다음 가져오는게 정성이다.
+- 하지만 우리는 orderRepository를 한번만 날렸다.
+- 이게 가능한 이유는 cascade 옵션을 줬기 때문이다.
+- 따라서 한번만 저장을 해줘도 delivery와 orderItem은 자동으로 persist 된다.
+
+### JPA dirty checking
+
+### 도메인 모델 패턴 vs 트렌잭션 스크립트 패턴
