@@ -113,3 +113,16 @@ trouble shutting
 ### JPA dirty checking
 
 ### 도메인 모델 패턴 vs 트렌잭션 스크립트 패턴
+
+### Illegal mix of collations (latin1_swedish_ci,IMPLICIT) and (utf8mb4_general_ci,COERCIBLE) for operation '='] [n/a]
+```sql
+ALTER TABLE member CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
+```
+### 엔티티 주의점
+- 화면에 대한 로직은 별도의 DTO를 만들어서 사용해야 하며 엔티티는 순수하게 유지해야 한다.
+- 여기서 순수하게란 validation check를 한다던가 엔티티 데이터를 맞추기 위한 로직은 클라이언트 DTO에 위치해야 한다.
+- 외부에는 엔티티를 API로 노출시키면 안된다.
+  - 컬럼을 하나 추가했을때 그 정보가 민감한 정보면 그대로 노출이 되어버리는 문제가 발생할 수 있다.
+  - API의 스팩이 변경된다. -> API가 반환하는 데이터가 달라진다.
+  - template engine에서는 노출시키는 것이 가능하다.
+
