@@ -65,7 +65,7 @@ class OrderServiceTest {
 
         //then
         Order one = orderRepository.findOne(order);
-        Assertions.assertEquals(one.getStatus(),OrderStatus.CANCAL , "주문이 취소되면 orderstate 는 cancel이 된다");
+        Assertions.assertEquals(one.getStatus(),OrderStatus.CANCEL , "주문이 취소되면 orderstate 는 cancel이 된다");
         Assertions.assertEquals(10 , book.getStockQuantity() , "주문이 취소되면 재고는 다시 돌아와야 한다.");
 
 

@@ -126,3 +126,37 @@ ALTER TABLE member CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
   - API의 스팩이 변경된다. -> API가 반환하는 데이터가 달라진다.
   - template engine에서는 노출시키는 것이 가능하다.
 
+### 변경 감지와 병합
+- entity를 가져와서 setter로 값을 변경하여 commit을 하면 자동으로 DB에 저장된다. -> dirty checking
+- 준영속 엔티티
+  - 영속성 컨텍스트가 더는 관리하지 않는 엔티티를 말한다.
+  - itemController의 updateItem()를 보면 해당 로직이 정상적으로 동작하는 것을 볼 수 있다.
+  - 그 이유는 book이 새로 만들어진 인스턴스이지만 BookForm.class 로 넘어온 id값을 통해 새로 만든 인스턴스의 id를 setting한 후 커밋하면
+  - 새로운 객체가 insert 되는 것이 아닌 해당 id가 update된다.
+  - 이것을 보고 우리는 임의로 만들어낸 엔티티도 DB에 식별자가 있는경우 JPA가 관리하고 있지는 않지만 commit을 하면 자동적으로 update query가
+  - 날라갈수 있는 엔티티를 준영속 엔티티라고 한다.
+- 문제는 준영속 엔티티는 JPA가 관리하지 않기 때문에 dirty checking이 일어나지 않음으로 DB update가 안된다.
+#### 변경감지를 이용한 update
+```java
+    @Transactional
+    public void updateItem(Long itemId , Book book){
+        Item item = itemRepository.findOne(itemId);
+        item.setPrice(book.getPrice());
+        item.setName(book.getName());
+        item.setStockQuantity(book.getStockQuantity());
+    }
+```
+#### 병합(merge)을 이용한 update
+```java
+    em.merge(item);
+```
+<img src="image/mergeProcess.png">
+#### 변경감지와 머지의 차이
+1. 변경강지는 setter하나가 update query 라고 볼수 있다. 따라서 컬럼 하나하나 update이 가능하다.
+2. 머지는 모든 컬럼을 한번에 변경하는 이치와 비슷하다. 따라서 식별자를 통해 DB에서 영속적인 엔티티를 찾아서 domain이 가진 모든 컬럼에 대해 update 한번에 날린다.
+   - 이게 문제가 해당 domain에 없으면 null update가 된다. 
+
+#### 무엇을 어떻게 사용해야 할까?
+- 변경감지를 사용해야 한다. null update가 너무 치명적이다.
+- update를 할때 service에서 setter를 사용하는것은 지양해야 한다.
+- 따라서 별도의 메서드를 생성하여 update를 진행하는것이 더 좋은 코드라고 할 수 있다.

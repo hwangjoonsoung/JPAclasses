@@ -63,7 +63,7 @@ public class OrderRepository {
         if(orderSearch.getOrderStatus() != null){
             query = query.setParameter("status", orderSearch.getOrderStatus());
         }
-        if(orderSearch.getMemberName() != null){
+        if(StringUtils.hasText(orderSearch.getMemberName())){
             query = query.setParameter("name", orderSearch.getMemberName());
         }
 

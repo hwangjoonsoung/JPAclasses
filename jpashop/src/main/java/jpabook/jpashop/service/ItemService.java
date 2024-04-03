@@ -1,6 +1,7 @@
 package jpabook.jpashop.service;
 
 import jakarta.persistence.Inheritance;
+import jpabook.jpashop.domain.item.Book;
 import jpabook.jpashop.domain.item.Item;
 import jpabook.jpashop.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,18 @@ public class ItemService {
 
     public Item findItem(Long id){
         return itemRepository.findOne(id);
+    }
+
+    @Transactional
+    public void updateItemUsingDirtyChecking(Long itemId , Book book){
+        Item item = itemRepository.findOne(itemId);
+        item.setPrice(book.getPrice());
+        item.setName(book.getName());
+        item.setStockQuantity(book.getStockQuantity());
+    }
+    @Transactional
+    public void updateItemUsingMerge(Long itemId , Book book){
+
     }
 
     public List<Item> findAll(){
