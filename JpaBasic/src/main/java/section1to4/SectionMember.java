@@ -1,17 +1,17 @@
-package hellojpa;
+package section1to4;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 @Entity
-public class Member {
+public class SectionMember {
 
-    public Member(Long id, String name) {
+    public SectionMember(Long id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public Member() {
+    public SectionMember() {
 
     }
 

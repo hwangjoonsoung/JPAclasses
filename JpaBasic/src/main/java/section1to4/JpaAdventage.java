@@ -1,11 +1,9 @@
-package hellojpa;
+package section1to4;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
-
-import javax.xml.transform.Result;
 
 public class JpaAdventage {
 
@@ -17,24 +15,24 @@ public class JpaAdventage {
 
 
         ts.begin();
-        Member member = new Member();
-        member.setId(200L);
-        member.setName("kang");
-        em.persist(member);
+        SectionMember sectionMember = new SectionMember();
+        sectionMember.setId(200L);
+        sectionMember.setName("kang");
+        em.persist(sectionMember);
 
         ts.commit();
 
-        Member member1 = em.find(Member.class, 200L);
-        Member member2 = em.find(Member.class, 200L);
-        System.out.println("Result = " + (member1 == member2));
+        SectionMember sectionMember1 = em.find(SectionMember.class, 200L);
+        SectionMember sectionMember2 = em.find(SectionMember.class, 200L);
+        System.out.println("Result = " + (sectionMember1 == sectionMember2));
 
     }
 
     public static void flase(String[] args) {
-        Member member = new Member(300L, "flash");
+        SectionMember sectionMember = new SectionMember(300L, "flash");
         ts.begin();
 
-        em.persist(member);
+        em.persist(sectionMember);
 
         em.flush();
         System.out.println("-----------------");

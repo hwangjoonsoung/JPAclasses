@@ -1,8 +1,6 @@
-package hellojpa;
+package section1to4;
 
 import jakarta.persistence.*;
-
-import java.util.List;
 
 public class JpaMain {
     public static void main(String[] args) {
@@ -17,20 +15,20 @@ public class JpaMain {
             *insert
             */
             // 비영속
-//            Member member = new Member();
-//            member.setId(100L);
-//            member.setName("Lee");
+//            SectionMember sectionMember = new SectionMember();
+//            sectionMember.setId(100L);
+//            sectionMember.setName("Lee");
 //            // 영속
-//            em.persist(member);
+//            em.persist(sectionMember);
 //            // 준영속
-//            em.detach(member);
+//            em.detach(sectionMember);
 //            // 삭제
-//            em.remove(member);
+//            em.remove(sectionMember);
             
             /**
             *select
             */
-            Member member = em.find(Member.class, 1L);
+            SectionMember sectionMember = em.find(SectionMember.class, 1L);
 
             /**
             *delete
@@ -40,11 +38,11 @@ public class JpaMain {
             /**
             *update
             */
-//            Member member1 = em.find(Member.class, 1L);
-//            member.setName("park");
-//            List<Member> members = em.createQuery("select m from Member as m", Member.class).getResultList();
-//            for (Member member : members) {
-//                System.out.println("member.getName() = " + member.getName());
+//            SectionMember member1 = em.find(SectionMember.class, 1L);
+//            sectionMember.setName("park");
+//            List<SectionMember> members = em.createQuery("select m from SectionMember as m", SectionMember.class).getResultList();
+//            for (SectionMember sectionMember : members) {
+//                System.out.println("sectionMember.getName() = " + sectionMember.getName());
 //            }
             
             transaction.commit();

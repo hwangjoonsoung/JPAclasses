@@ -65,15 +65,15 @@
 -  삭제된 상태
 ```java
     // 비영속
-    Member member = new Member();
-    member.setId(100L);
-    member.setName("Lee");
+    Member sectionMember = new Member();
+    sectionMember.setId(100L);
+    sectionMember.setName("Lee");
     // 영속
-    em.persist(member);
+    em.persist(sectionMember);
     // 준영속
-    em.detach(member);
+    em.detach(sectionMember);
     // 삭제
-    em.remove(member);
+    em.remove(sectionMember);
 ```
 ### 영속성 컨텍스트의 이점
 - 1차 캐시
@@ -111,4 +111,34 @@
   - ※운영 장비에는 절대 create, create-drop, update 사용하면 안된다.※
   - 개발 초기 단계에는 create 또는 update
   - 테스트 서버는 update 또는 validate
-  - 스테이징과 운영 서버는 validate 또는 none 
+  - 스테이징과 운영 서버는 validate 또는 none
+### Table Annoatation
+<img src="image/TableAnnotation.png">
+
+### mapping Annotation
+<img src="image/MappingAnnotation.png">
+
+### column Annotation
+<img src="image/ColumnAnnotation.png">
+
+### table 전략
+- 키 생성 전용 테이블을 하나 만들어서 데이터베이스 시퀀스를 흉내내는 전략
+- 장점: 모든 데이터베이스에 적용가능
+- 단점: 성능
+
+### 권장하는 시별자 전략
+- 기본 키 제약 조건 : null 아님, 유일, 변하면 안된다.
+- 미래까지 이 조건을 만족하는 자연키는 찾기 어렵다. 대리키(대체키)를 사용하자.
+- 권장 : Long형 + 대채키 + 키 생성전략 사용
+
+### IDENTITY 전략
+- GeneratedValue전략에서 IDENTITY를 사용하게 되면 기본키 생성을 DB에가 위임한다.
+- 즉, PK값을 DB에 들어가야 지만 알 수 있다.
+- 이렇게 지금까지의 내용으로 영속성 컨텍스트가 될 수없다. em.persist를 1차 캐시에서 key가 PK로 들어가함으로.
+- 때문에 IDENTITY를 사용하게 되면 persist할때 바로 flash 이뤄진다.
+
+### 데이터 중심 설계의 문제점
+- 현재 방식은 객체 설계를 테이블 설계에 맞춘 방식
+- 테이블의 외래키를 객체에 그대로 가져옴
+- 객체 그래프 탐색이 불가능
+- 참조가 없음으료 UML도 잘못됨
