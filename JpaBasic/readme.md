@@ -142,3 +142,36 @@
 - 테이블의 외래키를 객체에 그대로 가져옴
 - 객체 그래프 탐색이 불가능
 - 참조가 없음으료 UML도 잘못됨
+
+## 연관관계 매핑 기초
+### 목표
+- 객체와 테이블 연관관계의 차이를 이해
+- 객체의 참조와 테이블의 외래 키를 매핑
+- 용어 이해
+  - 방향 : 단방향, 양방향
+  - 다중성 : 1:N, N:1, 1:1 ,N:N
+  - 연관관계의 주인 : 객체 양방향 연관관계는 관리 주인이 필요
+### 연관관계의 주인
+- 양방향 매핑 규칙
+  - 객체의 두 관계중 하나를 연관관계의 주인으로 지정
+  - 연간관계의 주인만이 외래 키를 관리(등록,수정)
+  - 주인이 아닌 쪽은 읽기만 가능(readonly 속성을 가짐)
+  - 주인은 mappedBy 속성 사용하지 않는다.
+  - 주인이 아니면 mappedBy 속석으로 주인 지정
+- 누구를 주인으로 할꺼지?
+  - 외래 키가 있는 곳을 주인으로 정해라.
+### 연관관계 설정할 때 주의점.
+1. readonly 주인이 아닌쪽에서 값을 add 하는 경우 발생하는 문제
+   - ```java
+            TwoWaySection5Member member = new TwoWaySection5Member();
+            member.setName("member1");
+            em.persist(member);
+
+            TwoWayTeam twoWayTeam = new TwoWayTeam();
+            twoWayTeam.setName("TwoWayTeam A");
+            em.persist(twoWayTeam);
+     ```
+   - 위 같은 상황에서는 member의 team이 연관관계의 주인 속성을 가지고 있다.
+   - 즉 team의 pk가 member.team_id로 이뤄지는데 위 코드는 team의 pk가 생성되지 않는 상태에서 member.team_id를 넣는 것과 같다.
+   - 따라서,member.setTeam(team)을 해주는 방법을 선택하거나 아니면 team을 먼저 생성하고 member에 setTeam(team)을 해주는 방법을 채택한다.
+2. 
