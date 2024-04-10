@@ -174,4 +174,53 @@
    - 위 같은 상황에서는 member의 team이 연관관계의 주인 속성을 가지고 있다.
    - 즉 team의 pk가 member.team_id로 이뤄지는데 위 코드는 team의 pk가 생성되지 않는 상태에서 member.team_id를 넣는 것과 같다.
    - 따라서,member.setTeam(team)을 해주는 방법을 선택하거나 아니면 team을 먼저 생성하고 member에 setTeam(team)을 해주는 방법을 채택한다.
-2. 
+2. 양방향 매핑을 사용할때 양쪽에다 값을 전부 넣어야 한다.
+```java
+        TwoWayTeam twoWayTeam=new TwoWayTeam();
+        twoWayTeam.setName("TwoWayTeam B");
+        em.persist(twoWayTeam);
+
+        TwoWaySection5Member member=new TwoWaySection5Member();
+        member.setName("member2");
+        member.setTeam(twoWayTeam);
+        em.persist(member);
+
+        twoWayTeam.getMembers().add(member);
+
+//  em.flush();
+//  em.clear();
+        System.out.println("================================");
+        TwoWayTeam twoWayTeam1=em.find(TwoWayTeam.class,twoWayTeam.getId()); //select team query 날라감
+        List<TwoWaySection5Member> members=twoWayTeam1.getMembers(); //select member query 날라감
+
+        for(TwoWaySection5Member twoWaySection5Member:members){
+        System.out.println("twoWaySection5Member = "+twoWaySection5Member.getName());
+        }
+
+        transaction.commit();
+```
+- 위와같이 양방향 매핑을 해주는 경우 getMembers()에 .add() 해줘야 한다.
+- 그 이유는 add 해주지 않았을 경우 flash,clear를 해주지 않았을때 em.find는 1차 캐치에서 값을 찾아온다.
+- 이때 해당 캐시에는 메모리에 있음으로 twoWayTeam1.getMembers()를 했을때 값이 없다.
+- 해당 문제를 방어하기 위해서 양방향 매핑을 해줄때 값을 넣어 주는것이 맞다.
+- 권장하는 방법은 member의 teamSetter에서 team.getMembers().add(this)를 해주는 방법과
+- ```java
+    public void setTeam(TwoWayTeam twoWayTeam) {
+        this.twoWayTeam = twoWayTeam;
+        twoWayTeam.getMembers().add(this);
+    }
+- team에서 addMember해주는 method를 생성해서 넣는 방법을 권장한다.
+- ```java
+    public void addMember(TwoWaySection5Member member) {
+        member.setTeam(this);
+        members.add(member);
+    }
+3. 양방향 매핑시 무한루프 조심하기
+- lombok을 사용할때 toString을 사용하면 양방향으로 계속 호출하는 문제가 있다.
+- 따라서 lombok에서 toString을 사용하지 말아야 한다.
+- 만약 controller에서 엔티티를 반환해야 한다면 별도의 DTO를 만들어서 사용해야 한다.
+  - 엔티티를 반환할때 만약 엔티티가 변경된다고 하면 API 스팩이 변경되는 것이기 때문에 문제가 발생할 수 있다.
+### 정리
+- 양방향 연관관계를 바로 설계하기 보다는 단방향으로 먼저 설계를 완료 하고 양방향을 필요할때 추가 하는 것이 좋다.
+- 이때 양방향을 설계해야 겠다는 판단하는 기준은 JPQL로 역방향을 탐색해야 하는 경우가 있는 경우에 해야한다.
+- 연관관계의 주인은 외래 키의 위치를 기준으로 정해야 한다. (외래키가 들어가는 곳이 주인)

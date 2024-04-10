@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
+import one_way_association.Team;
 
 import java.util.List;
 
@@ -26,7 +27,17 @@ public class JpaMain {
             member.setTeam(twoWayTeam);
             em.persist(member);
 
+            twoWayTeam.getMembers().add(member);
 
+//            em.flush();
+//            em.clear();
+            System.out.println("================================");
+            TwoWayTeam twoWayTeam1 = em.find(TwoWayTeam.class, twoWayTeam.getId()); //select team query 날라감
+            List<TwoWaySection5Member> members = twoWayTeam1.getMembers(); //select member query 날라감
+
+            for (TwoWaySection5Member twoWaySection5Member : members) {
+                System.out.println("twoWaySection5Member = " + twoWaySection5Member.getName());
+            }
 
             transaction.commit();
         }catch (Exception e){
@@ -35,7 +46,6 @@ public class JpaMain {
             em.close();
             emf.close();
         }
-
 
     }
 }

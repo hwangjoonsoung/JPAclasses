@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
+import jpsshop.domain.Order;
 
 public class Main {
     public static void main(String[] args) {
@@ -13,6 +14,9 @@ public class Main {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         try {
+            Order order = new Order();
+
+
 
 
             transaction.commit();

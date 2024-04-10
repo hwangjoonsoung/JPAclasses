@@ -41,4 +41,10 @@ public class TwoWayTeam {
     public void setName(String name) {
         this.name = name;
     }
+
+    public void addMember(TwoWaySection5Member member) {
+        member.setTeam(this);
+        members.add(member);
+    }
+
 }

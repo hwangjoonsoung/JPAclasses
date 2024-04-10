@@ -48,5 +48,6 @@ public class TwoWaySection5Member {
 
     public void setTeam(TwoWayTeam twoWayTeam) {
         this.twoWayTeam = twoWayTeam;
+        twoWayTeam.getMembers().add(this);
     }
 }
