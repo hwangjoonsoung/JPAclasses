@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 @Entity
 public class Member {
@@ -18,6 +19,9 @@ public class Member {
     private String street;
     private String zipCode;
 
+    @OneToOne
+    @JoinColumn(name = "locker_id")
+    private Locker locker;
     @OneToMany(mappedBy = "member")
     private List<Order> orders = new ArrayList<>();
 
@@ -36,6 +40,13 @@ public class Member {
     public void setName(String name) {
         this.name = name;
     }
+
+    @OneToMany(mappedBy = "member")
+    private List<Member_Product> product;
+
+//    @ManyToMany
+//    @JoinTable(name = "member_product")
+//    private List<Product> products =new ArrayList<>();
 
     public String getCity() {
         return city;
