@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 @Entity
-public class Member {
+public class Member extends BaseEntity{
 
     @Id
     @Column(name = "member_id")

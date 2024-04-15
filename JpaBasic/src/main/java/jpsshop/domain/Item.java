@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.logging.Logger;
 
 @Entity
-public class Item {
+@DiscriminatorColumn
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public abstract class Item extends BaseEntity{
 
     @Id
     @Column(name = "item_id")

@@ -251,3 +251,50 @@
 - 그럼 무엇을 사용해야 할까?
 - ManyToMany를 중간에 테이블을 하나 두고 ManyToOne 과 OneToMany로 변경해야 한다.
 <img src="image/ManyToManySolve.png">
+### 상속관계 매핑
+- RDB에는 상속관계가 없다.
+- 슈퍼타입 서브타입 관계라는 모델링 기법이 객체 상속과 유사
+- 상속관계 매핑: 객체의 상속과 구조와 DB의 슈퍼타입 서브타입 관계를 매핑
+
+strategy = InheritanceType.JOINED)
+### @Inheritance
+- @DiscriminatorColumn를 사용하면 자동으로 dtype을 만들어준다.
+- @DiscriminatorValue를 사용하게 되면 하위 클래스의 dtype을 지정해 줄 수 있다.(이건 굳이 필요 없을 수도?!)
+
+<img src="image/strategy_join.png">
+
+1. 조인 전략으로 사용하는 방법: (strategy = InheritanceType.JOINED) 로 지정하면 조인전략으로 사용할 수 있다.
+   - 장점
+     - 정규화 되어 있음
+     - 외래키 참조 무결성 제약 조건 사용가능
+     - 저장공간의 효율화
+   - 단점
+     - 조회시 조인 필수로 사용
+     - 쿼리 복잡해 짐
+     - insert query 2번 나감..
+
+<img src="image/strategy_singleTable.png.png">
+
+2. 싱글 테이블로 사용하는 방법: (strategy = InheritanceType.SINGLE_TABLE)로 지정하면 사용가능
+   - 장점
+      - 쿼리가 단순해 진다. 
+      - 조인을 사용하지 않기 때문에 성능적으로 좋다. 
+      - dtype이 필수다.: 해당 row가 어떤 타입의 데이터인지 확인 불가능
+   - 단점
+     - 하지만 TABLE이 컬럼이 너무 많아서 복잡함...
+     - null 허용해야한다.
+
+<img src="image/stregegy_class.png">
+3. 구현 클레스마다 테이블 전략 : (InheritanceType.TABLE_PER_CLASS)로 지정한다.
+   <p style="color: red"> 이건 사용하면 안된다.</p>
+   - 부모 클레스를 추상클레스로 지정하고 InheritanceType.TABLE_PER_CLASS를 사용하면 슈퍼 테이블은 테이블 생성이 안되고 서브 테이블만 테이블이 생긴다.
+
+### MappedSuperclass
+<img src="image/commonColumn.png">
+
+- 공통적인 컬럼이 있는 경우 사용할 수 있다.
+- BaseEntity를 하나 만들어서 @MappedSuperclass를 선언해 준후 column을 선언한다.
+- 이후 공통적인 컬럼을 가진 Entity에 해당 class를 상속받으면 해당 BaseEntity의 컬럼이 적용된다.
+- 이때 컬럼명을 변겅하고 싶으면 @colnum(name="")을 사용하면 끗
+- 하위 클래스 모두에게 적용되는 것은 아니고 바로 하위 클래스에만 적용된다.
+- 직접 생성해서 사용하는 것이 아님으로 추상클레스 권장

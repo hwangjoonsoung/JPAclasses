@@ -1,14 +1,9 @@
-package jpsshop.main;
+package inheritance_relationship;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
-import jpsshop.domain.Album;
-import jpsshop.domain.Item;
-import jpsshop.domain.Order;
-
-import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,17 +13,18 @@ public class Main {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         try {
-            Album album = new Album();
-            album.setArtist("kim");
-            album.setEtc("test");
-            em.persist(album);
+            Movie2 movie = new Movie2();
+            movie.setAuthor("kim");
+            movie.setIsbn("999");
+            movie.setName("joker");
+            movie.setPrice(10000);
+
+            em.persist(movie);
             em.flush();
             em.clear();
-            System.out.println("album.getArtist() = " + album.getArtist());
-            List<Album> artist = em.createQuery("select i from Album i where i.artist = :artist").setParameter("artist", album.getArtist()).getResultList();
-            for (Album o : artist) {
-                System.out.println("o. = " + o.getName());
-            }
+
+            Movie2 movie1 = em.find(movie.getClass(), movie.getId());
+            System.out.println("movie1 = " + movie1.getName());
 
             transaction.commit();
         } catch (Exception e) {

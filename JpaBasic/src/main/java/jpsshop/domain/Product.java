@@ -6,7 +6,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import java.util.List;
 
 @Entity
-public class Product {
+public class Product extends BaseEntity{
 
     @Id
     @GeneratedValue
