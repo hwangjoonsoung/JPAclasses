@@ -36,21 +36,32 @@ public class JpaMain {
             /**
             *객체지향적으로 설계를 하면 다음과 같이 사용할 수 있다.
             */
-            Team team = new Team();
-            team.setName("TwoWayTeam A");
-            em.persist(team);
-
-            Section5Member member = new Section5Member();
-            member.setName("member1");
-            member.setTeam(team);
-            em.persist(member);
+//            Team team = new Team();
+//            team.setName("TwoWayTeam A");
+//            em.persist(team);
+//
+//            Section5Member member = new Section5Member();
+//            member.setName("member1");
+//            member.setTeam(team);
+//            em.persist(member);
 
             /**
             *ID는 변경할 수 없다.
             */
-            Section5Member findMember = em.find(Section5Member.class, 302L);
-            Team findTeam = findMember.getTeam();
-            findTeam.setName("test100");
+//            Section5Member findMember = em.find(Section5Member.class, 302L);
+//            Team findTeam = findMember.getTeam();
+//            findTeam.setName("test100");
+
+            Section5Member member = new Section5Member();
+            member.setName("hello");
+
+            em.persist(member);
+            em.flush();
+            em.clear();
+
+            Section5Member reference = em.getReference(Section5Member.class, member.getId());
+            System.out.println("reference = " + reference);
+            System.out.println("reference.getclass = " + reference.getClass());
 
             transaction.commit();
         }catch (Exception e){

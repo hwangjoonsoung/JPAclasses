@@ -14,7 +14,7 @@ public class Delivery extends BaseEntity{
     private String zipcode;
     private DeliveryStatus status;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
 

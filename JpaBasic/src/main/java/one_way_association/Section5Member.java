@@ -14,7 +14,7 @@ public class Section5Member {
 
     /*    @Column(name = "team_id")
         private Long teamId;*/
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
 

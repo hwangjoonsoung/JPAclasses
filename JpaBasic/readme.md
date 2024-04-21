@@ -297,4 +297,76 @@ strategy = InheritanceType.JOINED)
 - 이후 공통적인 컬럼을 가진 Entity에 해당 class를 상속받으면 해당 BaseEntity의 컬럼이 적용된다.
 - 이때 컬럼명을 변겅하고 싶으면 @colnum(name="")을 사용하면 끗
 - 하위 클래스 모두에게 적용되는 것은 아니고 바로 하위 클래스에만 적용된다.
-- 직접 생성해서 사용하는 것이 아님으로 추상클레스 권장
+- 직접 생성해서 사용하는 것이 아님으로 추상클레스 권장 
+
+### 경우애 따라서 연관관계가 설정된 값을 가져오는 방법
+- em.getReference()를 DB 조회를 미루는 가짜 엔티티 객체 조회할 수 있다.
+- 실제로 사용할때 DB조회를 진행하는 query를 날린다.
+
+### 프록시 특징
+- 실제 클래스를 상속 받아서 만들어진다.
+- 실제 클래스와 겉 모양이 같다.
+- 사용하는 입장에서는 진짜 객체인지 프로시 객체인지 구분하지 않고 사용하면 된다
+- 프록시 객체는 실제 객체의 참조를 보관
+- 프록시 객체를 호출하면 프록시 객체는 실제 객체의 메소드를 호출한다.
+- <img src="image/proxyDelegate.png">
+- 프록시 객체를 초기화 할때 프록시 객체가 실제 엔티티로 바뀌는 것은 아니다. 초기화 되면 프록시 객체를 통해서 실제 엔티티에 접근 가능하다.
+- 프록시 객체는 원본 엔티티를 상속받음, 따라서 타입 체크시 주의해야 한다. (== 보다는 instance of 를 사용해야 한다)
+
+### 프록시 객체의 초기화
+<img src="image/Proxy_operation_process.png">
+
+### 프록시 확인
+- 프록시 인스턴스의 초기화 여부 확인
+  - PersistenceUnitUtil.isLoaded(Obejct entity)
+-  프록시 클래스 확인 방법
+  - entity.getClass() 출력
+- 프록시 강제 초기화
+  - org.hibernate.Hibernate.initialize(entity)
+
+### 지연로딩
+```java
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
+```
+- 위와같이 지연로딩을 사용하면 entity를 조회할때 proxy로 조회할 수 있다.
+- 따라서 실질적으로 team을 사용하는 시점에 초기화가 된다.
+
+### 즉시로딩
+```java
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "team_id")
+    private Team team;
+```
+- 즉시로딩은 프록시를 사용하지 않는다.
+- 따라서 두 테이블을 같이 사용하는 경우가 많다면 즉시로딩을 사용하면 편하다.
+
+### 즉시로딩 문제점
+- 즉시 로딩을 적용하면 예상하지 못한 sql이 발생
+- 즉시 로딩은 JPQL에서 N+1 문제를 일으킨다
+- @ManyToOne, @OneToOne은 기본이 즉시 로딩 -> Lazy로 설정
+- @OneToMany, @ManyToMany는 기본이 지연로딩
+
+### 영속성 전이
+```java
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+```
+- 특정 엔티티를 영속 상태로 만들 때 연관된 엔티티도 함께 영속상태로 만들고 싶을때
+  - 예를 들어 부모 엔티티를 저장할때 자식 엔티티도 동시에 저장
+- 만약 자식의 소유자가 1개 이면 영속성 전이를 사용해도 무방하지만 그렇지 않는 경우 문제가 생길 가능성이 있다.
+
+### 고아 객체
+```java
+    @OneToMany(mappedBy = "parent",orphanRemoval = true)
+```
+- 고아 객체 제거: 부모 엔티티와 연관관계가 끊어진 자식 엔티티를 자동으로 삭제
+- 참조가 제거된 엔티티는 다론 곳에서 참조하지 않는 고아 객체로 보고 삭제하는 기능
+- 참조하는 곳이 하나일 때 사용해야 함
+- 특정 언테티티가 개인 소유할 때 사용
+- @OneToOne, @OneToMany만 사용가능
+- cascade.remove와 비슷하게 동작한다.
+- 
+### 영속성 전이 + 고아객체를 동시에 활성화 하면
+- 생명주기를 부모 엔티티를 통해서 자식 엔티티의 생명주기를 관리할 수 있다.
+- DDD의 Aggregate Root 개념을 구현할 때 유용
