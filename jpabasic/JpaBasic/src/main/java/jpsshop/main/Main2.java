@@ -22,14 +22,14 @@ public class Main2 {
             Member member = new Member();
             member.setName("hwnag");
             member.setHomeAddress(new Address("home", "address", "zipcode"));
-            member.getFavoriteFoods().add("apple");
-            member.getFavoriteFoods().add("banana");
-            member.getFavoriteFoods().add("chicken");
-
-            member.getAddressHistory().add(new AddressEntity("city1", "address", "zipcode"));
-            member.getAddressHistory().add(new AddressEntity("city2", "address", "zipcode"));
-            member.getAddressHistory().add(new AddressEntity("city3", "address", "zipcode"));
-            member.getAddressHistory().add(new AddressEntity("city4", "address", "zipcode"));
+//            member.getFavoriteFoods().add("apple");
+//            member.getFavoriteFoods().add("banana");
+//            member.getFavoriteFoods().add("chicken");
+//
+//            member.getAddressHistory().add(new AddressEntity("city1", "address", "zipcode"));
+//            member.getAddressHistory().add(new AddressEntity("city2", "address", "zipcode"));
+//            member.getAddressHistory().add(new AddressEntity("city3", "address", "zipcode"));
+//            member.getAddressHistory().add(new AddressEntity("city4", "address", "zipcode"));
 
             em.persist(member);
             em.flush();
