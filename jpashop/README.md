@@ -151,6 +151,7 @@ ALTER TABLE member CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
     em.merge(item);
 ```
 <img src="image/mergeProcess.png">
+
 #### 변경감지와 머지의 차이
 1. 변경강지는 setter하나가 update query 라고 볼수 있다. 따라서 컬럼 하나하나 update이 가능하다.
 2. 머지는 모든 컬럼을 한번에 변경하는 이치와 비슷하다. 따라서 식별자를 통해 DB에서 영속적인 엔티티를 찾아서 domain이 가진 모든 컬럼에 대해 update 한번에 날린다.
