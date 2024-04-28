@@ -247,7 +247,7 @@
     - 단점 : 프록시 기능의 한계로 지연 로딩으로 설정해도 항상 즉시 로딩 됨.
 ### N:N
 - 관계형 DB는 정규화된 테이블 2개로 N:N 관계를 표현할 수 없음
-- 따라서 연결 테이블을 추가해서 1:N, N:1 관계로 풀어나가야 함.
+- 따라서 연결 테이블을 추가해서 1:N,  N:1 관계로 풀어나가야 함.
 - 근데 객체는 N:N이 가능한 구조로 만들수 있지만 사용하면 안된다.
 - 그럼 무엇을 사용해야 할까?
 - ManyToMany를 중간에 테이블을 하나 두고 ManyToOne 과 OneToMany로 변경해야 한다.
@@ -257,10 +257,10 @@
 - 슈퍼타입 서브타입 관계라는 모델링 기법이 객체 상속과 유사
 - 상속관계 매핑: 객체의 상속과 구조와 DB의 슈퍼타입 서브타입 관계를 매핑
 
-strategy = InheritanceType.JOINED)
-### @Inheritance
-- @DiscriminatorColumn를 사용하면 자동으로 dtype을 만들어준다.
-- @DiscriminatorValue를 사용하게 되면 하위 클래스의 dtype을 지정해 줄 수 있다.(이건 굳이 필요 없을 수도?!)
+
+### @Inheritance (strategy = InheritanceType.JOINED)
+- @DiscriminatorColumn를 사용하면 자동으로 dtype을 만들어준다. (parent class에 사용해야 한다,.)
+- @DiscriminatorValue를 사용하게 되면 하위 클래스의 dtype을 지정해 줄 수 있다.(하위 클레스에 사용해야 한다.) 
 
 <img src="image/strategy_join.png">
 

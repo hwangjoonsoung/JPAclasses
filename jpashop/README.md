@@ -161,3 +161,9 @@ ALTER TABLE member CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
 - 변경감지를 사용해야 한다. null update가 너무 치명적이다.
 - update를 할때 service에서 setter를 사용하는것은 지양해야 한다.
 - 따라서 별도의 메서드를 생성하여 update를 진행하는것이 더 좋은 코드라고 할 수 있다.
+
+#### naming 규칙 변경
+
+https://velog.io/@hyun-jii/JPA-Naming-Strategy-To-upper-snake-case
+
+#### 연관관계 편의 메소드
