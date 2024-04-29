@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 class Member2RepositoryTest {
 
     @Autowired
-    MemberRepository memberRepository;
+    MemberRepository2 memberRepository;
 
 
     @Test

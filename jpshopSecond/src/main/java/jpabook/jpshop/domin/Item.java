@@ -1,6 +1,7 @@
 package jpabook.jpshop.domin;
 
 import jakarta.persistence.*;
+import jpabook.jpshop.exception.NotEnoughStockException;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,6 +28,24 @@ public class Item {
 
     @ManyToMany(mappedBy = "items")
     private List<Category> categories = new ArrayList<>();
+
+
+    /*==비즈니스 로직==*/
+    public void addStock(int quentity) {
+        this.stockQuantity += quentity;
+    }
+
+    public void removeStock(int quentyty) {
+        int restStock = this.stockQuantity - quentyty;
+
+        if(restStock < 0){
+            throw new NotEnoughStockException("need more stock");
+        }
+        this.stockQuantity = restStock;
+
+
+    }
+
 
 
 }
