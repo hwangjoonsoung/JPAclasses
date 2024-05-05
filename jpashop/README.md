@@ -138,6 +138,7 @@ ALTER TABLE member CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
 - 문제는 준영속 엔티티는 JPA가 관리하지 않기 때문에 dirty checking이 일어나지 않음으로 DB update가 안된다.
 #### 변경감지를 이용한 update
 ```java
+    ItemService.java
     @Transactional
     public void updateItem(Long itemId , Book book){
         Item item = itemRepository.findOne(itemId);
@@ -148,6 +149,7 @@ ALTER TABLE member CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
 ```
 #### 병합(merge)을 이용한 update
 ```java
+    ItemRepository.java
     em.merge(item);
 ```
 <img src="image/mergeProcess.png">
@@ -161,3 +163,14 @@ ALTER TABLE member CONVERT TO CHARACTER SET utf8 COLLATE 'utf8_general_ci';
 - 변경감지를 사용해야 한다. null update가 너무 치명적이다.
 - update를 할때 service에서 setter를 사용하는것은 지양해야 한다.
 - 따라서 별도의 메서드를 생성하여 update를 진행하는것이 더 좋은 코드라고 할 수 있다.
+
+#### 코드 주의사항
+- 컨트롤러에서 어섪츠게 엔티티를 생성하지 않기
+- 트랜잭션이 있는 서비스 계층에서 식별자와 변경할 데이터를 명확하게 전달
+- 트랜잭션이 있는 서비스 계층에서 영속 상태의 엔티티를 조회하고, 엔티티의 데이터를 직접 변경
+
+#### naming 규칙 변경
+
+https://velog.io/@hyun-jii/JPA-Naming-Strategy-To-upper-snake-case
+
+#### 연관관계 편의 메소드
