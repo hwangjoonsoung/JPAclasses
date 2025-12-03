@@ -2,6 +2,7 @@ package jpabook.jpshop.domin;
 
 import com.fasterxml.jackson.databind.jsontype.impl.AsDeductionTypeDeserializer;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.autoconfigure.amqp.RabbitConnectionDetails;
@@ -22,6 +23,7 @@ public class Member {
     @Column(name = "member_id")
     private Long id;
 
+    @NotEmpty
     private String name;
 
     @Embedded

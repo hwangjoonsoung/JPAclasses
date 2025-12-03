@@ -4,7 +4,6 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/jpashop
     username: root
     password: wnstjd93
-
   jpa:
     hibernate:
       ddl-auto: none
