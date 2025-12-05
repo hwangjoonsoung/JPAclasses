@@ -6,7 +6,7 @@ spring:
     password: rootroot
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     properties:
       hibernate:
         show_sql: true
