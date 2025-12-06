@@ -4,11 +4,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jpabook.jpshop.domin.Order;
 import jpabook.jpshop.domin.OrderSearch;
+import jpabook.jpshop.dto.OrderSimpleQueryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.TreeMap;
 
 @Repository
 @RequiredArgsConstructor
@@ -74,5 +74,17 @@ public class OrderRepository {
 
     }
 
+    //fetch join
+    public List<Order> findAllWithMemberDelivery() {
+        return em.createQuery("select o from Order  o " +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d", Order.class)
+                .getResultList();
+    }
 
+    public List<OrderSimpleQueryDto> findOrderDtos() {
+        return em.createQuery("select new jpabook.jpshop.dto.OrderSimpleQueryDto(o.id,m.name,o.orderDateTime , o.orderStatus , d.address) o from Order o" +
+                " join o.member m " +
+                " join o.delivery d ", OrderSimpleQueryDto.class).getResultList();
+    }
 }
