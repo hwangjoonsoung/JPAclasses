@@ -6,6 +6,7 @@ import jpabook.jpshop.domin.Order;
 import jpabook.jpshop.domin.OrderSearch;
 import jpabook.jpshop.dto.OrderSimpleQueryDto;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.query.NativeQuery;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -82,9 +83,33 @@ public class OrderRepository {
                 .getResultList();
     }
 
+    public List<Order> findAllWithMemberDelivery(int offset, int limit) {
+        return em.createQuery("select o from Order  o " +
+                        " join fetch o.member m" +
+                        " join fetch o.delivery d", Order.class)
+                .setFirstResult(offset).setMaxResults(limit)
+                .getResultList();
+    }
+
     public List<OrderSimpleQueryDto> findOrderDtos() {
         return em.createQuery("select new jpabook.jpshop.dto.OrderSimpleQueryDto(o.id,m.name,o.orderDateTime , o.orderStatus , d.address) o from Order o" +
                 " join o.member m " +
                 " join o.delivery d ", OrderSimpleQueryDto.class).getResultList();
+    }
+
+    public List<Order> findAllWithItem() {
+        return em.createQuery("select o from Order  o " +
+                " join fetch o.member m " +
+                " join fetch o.delivery d " +
+                " join fetch o.orderItems oi " +
+                " join fetch oi.item i", Order.class).getResultList();
+    }
+
+    public List<Order> findAllWithItemPagingTest() {
+        return em.createQuery("select o from Order  o " +
+                " join fetch o.member m " +
+                " join fetch o.delivery d " +
+                " join fetch o.orderItems oi " +
+                " join fetch oi.item i", Order.class).setFirstResult(1).setMaxResults(100).getResultList();
     }
 }
