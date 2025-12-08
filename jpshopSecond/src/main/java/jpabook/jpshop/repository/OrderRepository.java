@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jpabook.jpshop.domin.Order;
 import jpabook.jpshop.domin.OrderSearch;
+import jpabook.jpshop.dto.OrderQueryDto;
 import jpabook.jpshop.dto.OrderSimpleQueryDto;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.NativeQuery;
@@ -92,7 +93,7 @@ public class OrderRepository {
     }
 
     public List<OrderSimpleQueryDto> findOrderDtos() {
-        return em.createQuery("select new jpabook.jpshop.dto.OrderSimpleQueryDto(o.id,m.name,o.orderDateTime , o.orderStatus , d.address) o from Order o" +
+        return em.createQuery("select new jpabook.jpshop.dto.OrderSimpleQueryDto(o.id,m.name,o.orderDateTime , o.orderStatus , d.address) from Order o" +
                 " join o.member m " +
                 " join o.delivery d ", OrderSimpleQueryDto.class).getResultList();
     }

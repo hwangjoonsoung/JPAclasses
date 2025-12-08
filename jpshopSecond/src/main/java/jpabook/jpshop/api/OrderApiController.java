@@ -1,7 +1,11 @@
 package jpabook.jpshop.api;
 
 import jpabook.jpshop.domin.*;
+import jpabook.jpshop.dto.OrderFlatDto;
+import jpabook.jpshop.dto.OrderItemQueryDto;
+import jpabook.jpshop.dto.OrderQueryDto;
 import jpabook.jpshop.repository.OrderRepository;
+import jpabook.jpshop.repository.order.query.OrderQueryRepository;
 import jpabook.jpshop.service.OrderService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,15 +19,18 @@ import java.util.List;
 import java.util.PrimitiveIterator;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.*;
+
 @RestController
 @RequiredArgsConstructor
 public class OrderApiController {
 
     private final OrderRepository orderRepository;
+    private final OrderQueryRepository orderQueryRepository;
     private final OrderService orderService;
 
     @GetMapping("/api/v1/orders")
-    public List<Order> ordersV1(){
+    public List<Order> ordersV1() {
         List<Order> orders = orderRepository.findAllByString(new OrderSearch());
         for (Order order : orders) {
             order.getMember().getName();
@@ -55,7 +62,7 @@ public class OrderApiController {
         private LocalDateTime orderDate;
         private OrderStatus orderStatus;
         private Address address;
-//        private List<OrderItem> orderItems; ///entity가 외부에 노출됨
+        //        private List<OrderItem> orderItems; ///entity가 외부에 노출됨
         private List<OrderItemDto> orderItems;
 
         public OrderDto(Order order) {
@@ -70,7 +77,7 @@ public class OrderApiController {
     }
 
     @Data
-    static class OrderItemDto{
+    static class OrderItemDto {
         private String itemName;
         private int orderPrice;
         private int count;
@@ -117,7 +124,7 @@ public class OrderApiController {
     public List<OrderDto> orderV3_1_1_page(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                            @RequestParam(value = "limit", defaultValue = "100") int limit
     ) {
-        List<Order> orders = orderRepository.findAllWithMemberDelivery(offset,limit);
+        List<Order> orders = orderRepository.findAllWithMemberDelivery(offset, limit);
         return orders.stream().map(order -> new OrderDto(order))
                 .collect(Collectors.toList());
     }
@@ -134,4 +141,78 @@ public class OrderApiController {
      * 3-1. DB에 따라서 다르지만 in query가 1000개 이상 넘기면 오류가 나는 DB가 있음.
      * 3-2. fetch_size를 너무 크게 하면 순간 큰 부하가 생길 가능성이 있으며 너무 작게 하면 부하는 작지만 속도는 느리다. 이거는 서버 스펙에 따라 다르다.
      **/
+
+    @GetMapping("/api/v4/orders")
+    public List<OrderQueryDto> orderV4(){
+        return orderQueryRepository.findOrderQueryDtos();
+    }
+
+    /**
+     * toOne 관계는 한개의 row로 가져올 수 있지만 toMany관계는 그렇지 않다.
+     * 그렇기 때문에 loop를 돌면서 순회하면서 별도로 조회하는 방법을 사용한다.
+     * 1. 여기서 순회를 하면서 조회하는 코드로 인해 N+1문제가 발생된다.
+     * 2. 근데 예제에서는 item까지 조회를 해야 함으로 M+N+1문제가 발생한다. (order(2 row) -> orderItems (2 row) -> items (4 row))
+     * OrderQueryRepository.class
+     * orders.forEach(order -> {
+     *     List<OrderItemQueryDto> orderItems = findOrderItems(order.getOrderId());
+     *     order.setOrderItem(orderItems);
+     * });
+     **/
+
+    @GetMapping("/api/v5/orders")
+    public List<OrderQueryDto> orderV5(){
+        return orderQueryRepository.findOrderQueryDtosOptimization();
+    }
+    /**
+     * 쿼리 조건을 in 절로 변경함으로써 한번에 1+1형식으로 가져올 수 있도록 변경
+     **/
+
+    @GetMapping("/api/v6/orders")
+    public List<OrderQueryDto> ordersV6() {
+        List<OrderFlatDto> flats = orderQueryRepository.findOrderQueryDtosFlat();
+
+        return flats.stream()
+                .collect(groupingBy(o -> new OrderQueryDto(o.getOrderId(),
+                                o.getName(), o.getOrderDate(), o.getOrderStatus(), o.getAddress()),
+                        mapping(o -> new OrderItemQueryDto(o.getOrderId(),
+                                o.getItemName(), o.getOrderPrice(), o.getCount()), toList())
+                )).entrySet().stream()
+                .map(e -> new OrderQueryDto(e.getKey().getOrderId(),
+                        e.getKey().getName(), e.getKey().getOrderDate(), e.getKey().getOrderStatus(),
+                        e.getKey().getAddress(), e.getValue()))
+                .collect(toList());
+
+//        return flats.stream().collect(
+//                        groupingBy(o -> new OrderQueryDto(
+//                                        o.getOrderId(), o.getName(), o.getOrderDate(), o.getOrderStatus(), o.getAddress())
+//                                , mapping(o ->
+//                                        new OrderItemQueryDto(o.getOrderId(), o.getItemName(), o.getOrderPrice(), o.getCount()), toList()
+//                                ))).entrySet().stream()
+//                .map(e -> new OrderQueryDto(e.getKey().getOrderId(), e.getKey().getName(), e.getKey().getOrderDate(), e.getKey().getOrderStatus(), e.getKey().getAddress(), e.getValue())).collect(toList());
+    }
+    /**
+     * 장점: 쿼리 1번에 작업 가능
+     * 단점:
+     * 1. paging 불가능
+     * 2. 메모리에서 별도의 작업이 필요하다는 점
+     * 3. 상황에 따라서 v5보다 느릴 수 있다.
+     **/
+
+    /**
+     * 권장 순서
+     * 1. 엔티니 조회방식으로 우선 접근
+     * 1-1: fetch join으로 쿼리 수를 최적회
+     * 1-2: 켈렉션 최적화
+     * 1-2-1: 페이징 필요한 경우 : batch_fetch_size적용
+     * 1-2-2: 페이징 필요없는 경우 : fetch join 사용
+     * 2. 엔티티 조회 방식으로 해결이 안되면 dto조회 방식 사용
+     * 2-1: dto를 조회하는 방식은 성능 최적화 방식을 수정하는 경우 코드를 변경해야 할 가능성이 큼
+     * 3. dto 조회 방식으로 해결 안되면 nativeSQL or spring jdbc template 사용
+     **/
+
+    /**
+     * 성능 최적화와 코드 복잡도에서 줄타기를 해야한다.
+     * 결국 dto로 최적화해서 가져와야 하면 v5방식을 선택하는것이 최선의 선택이 될 수 있고, 코드 복잡도를 해결하기 위해서는 v3.1.1방식을 사용해야 한다.
+     **/
+
 }
