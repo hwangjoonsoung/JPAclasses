@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id","userName","age"})
 public class Member {
@@ -25,6 +26,12 @@ public class Member {
     public Member(String userName) {
         this.userName = userName;
     }
+
+    public Member(String userName, int age) {
+        this.userName = userName;
+        this.age = age;
+    }
+
 
     public Member(String userName, int age, Team team) {
         this.userName = userName;
