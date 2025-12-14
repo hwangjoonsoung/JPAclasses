@@ -3,15 +3,16 @@ package study.datajpa.repository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.LazyInitializationExcludeFilter;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
+import study.datajpa.dto.MemberProjection;
+import study.datajpa.dto.UserNameOnlyDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
@@ -32,6 +33,8 @@ class MemberRepositoryTest {
     @PersistenceContext
     @Autowired
     EntityManager em;
+    @Autowired
+    private LazyInitializationExcludeFilter eagerJpaMetamodelCacheCleanup;
 
     @Test
     public void testMember(){
@@ -268,4 +271,274 @@ class MemberRepositoryTest {
 
     }
 
+    @Test
+    public void findMemberLazy() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 20, teamB);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> members = memberRepository.findAll();
+//        List<Member> members = memberRepository.findMemberFetchJoin();
+        for (Member member : members) {
+            System.out.println(member.getUserName());
+            System.out.println(member.getTeam().getTeamName());
+        }
+
+        //then
+    }
+    /**
+     * fetch join을 할 때는 jpql을 사용해야 하는데. 약간 귀찮음.
+     * 이를 해결하기 위해서 entity graph를 사용한다.
+     * @EntityGraph(attributePaths = "team")
+     **/
+
+    @Test
+    public void queryHint() {
+        //given
+        Member save = memberRepository.save(new Member("member1", 10));
+        em.flush(); //insert query 발생
+        em.clear(); //persistence context 비우기
+
+        //when
+        Member member = memberRepository.findById(save.getId()).get(); // select query 발생
+        member.setUserName("member2");
+        em.flush(); // update query 나감
+
+        //then
+
+    }
+
+    @Test
+    public void queryHint2() {
+        //given
+        Member save = memberRepository.save(new Member("member1", 10));
+        em.flush(); //insert query 발생
+        em.clear(); //persistence context 비우기
+
+        //when
+        Member member = memberRepository.findById(save.getId()).get(); // select query 발생
+        member.setUserName("member2");
+        em.flush(); // update query 나감
+
+    }
+
+    /**
+     * 변경감지 때문에 2개의 객체를 생성하는데 (변경 전 객체, 변경 후 객체)
+     * 따라서 변경감지가 필요 없는경우(readonly의 조건)에서 적용한다.
+     * @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly" , value = "true"))
+     * 근데 여기서 이제 문제는 read only를 조건을 안준다고 해도 GC로 인해서 쉽게 해결이 가능하다는것.
+     * */
+    
+    @Test
+    @DisplayName("lock test")
+    void locktest() throws Exception {
+        //given
+        Member save = memberRepository.save(new Member("member1", 10));
+        em.flush(); //insert query 발생
+        em.clear(); //persistence context 비우기
+
+        //when
+        Member member = memberRepository.findLockByUserName("member1").get(0);
+        //then
+    }
+
+    @Test
+    @DisplayName("custom repository")
+    void customRepository() throws Exception {
+        //given
+        List<Member> memberCustom = memberRepository.findMemberCustom();
+        System.out.println(memberCustom);
+
+        //when
+    
+        //then
+    }
+    /**
+     * spring data jpa를 사용하는 도중에 특정 함수는 내가 직접 custom하는 방법
+     * 주로: query dsl 적용
+     * 규직: 구현체 class를 생성할 때 spring data jpa의 interface name의 Impl을 붙여서 생성한다.
+     * 1. interface 생성 (MemberRepositoryCustom)
+     * 2. 구현체 class 생성 (MemberRepositoryImpl) 이때 class name은 spring data jpa의 interface이름 + Impl로 작성한다.
+     * 3. spring data jpa를 사용하는 interface에서 생성한 interface 상속 (MemberRepository)
+     **/
+
+    /**
+     * 여기서 이제 생각을 해봐야 하는데.
+     * 이 custom하는 기능이 정말 필요할까? 라는 생각을 해야봐야한다.
+     * 저렇게 사용하면 interface, 구현체 class를 생성해야 한다. 이는 관리해야 하는 파일이 늘어남을 의미한다.
+     * 이 방법 보다는 entity manager를 사용하는 class를 생성하여 사용하는 것이 더 나은 선택일 수 있다.
+     **/
+
+    @Test
+    @DisplayName("Jpa event base entity")
+    void jpaEventBaseEntity() throws Exception {
+
+        //given
+        Member member = memberRepository.save(new Member("member1", 10));
+        em.flush(); //insert query 발생
+        em.clear(); //persistence context 비우기
+
+        //when
+        Member findMember = memberRepository.findByNames(Arrays.asList("member1")).get(0);
+        System.out.println("insert member's created date: "+ findMember.getCreatedDate());
+        System.out.println("insert member's updated date: "+ findMember.getUpdatedDate());
+        System.out.println("insert member's created by: "+ findMember.getCreatedBy());
+        System.out.println("insert member's updated by: "+ findMember.getUpdatedBy());
+        findMember.setUserName("member2");
+        em.flush();
+        Member updatedMemberFind = memberRepository.findByNames(Arrays.asList("member2")).get(0);
+        Thread.sleep(1000);
+        System.out.println("update member's created date: "+updatedMemberFind.getCreatedDate());
+        System.out.println("update member's updated date: "+updatedMemberFind.getUpdatedDate());
+        System.out.println("update member's created by: "+ updatedMemberFind.getCreatedBy());
+        System.out.println("update member's updated by: "+ updatedMemberFind.getUpdatedBy());
+        //then
+    }
+
+    /**
+     * entity를 생성할때 공통적인 column이 있는데 created date, updated date, create by, updated by가 있다.
+     * 이거는 일반적으로 시스템에서 자동적으로 입력과 수정이 이뤄져야 하는데 데이터가 생성이나 수정될 때마다 입력하는건 너무 불편하다
+     * 때문에 entity에 BaseEntity를 상속받는 것으로 entity table에 common column (@MappedSuperclass)을 적용할 수 있다.
+     * jpa가 자동적으로 데이터를 insert, update하기 위해서는 다음과 같은 작업이 필요하다
+     * case 1: 날짜의 경우
+     * 1. @PrePersist,@PreUpdate를 통해 날짜 update
+     * case 2: 이름의 경우
+     * 1. @SpringBootStarter에 @EnableJpaAuditing 추가
+     * 2. AuditorAware<string>을 return하는 환경설정을 통해 작업 (getCurrentAuditor() 참고)-> 이는 자동으로 jpa가 입력하기 위함
+     * 3. BaseEntity에 @EntityListeners(AuditingEntityListener.class) 추가
+     **/
+
+    @Test
+    @DisplayName("query by example")
+    void queryByExample() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member member1 = new Member("member1", 0, teamA);
+        Member member2 = new Member("member2", 0, teamA);
+        em.persist(member1);
+        em.persist(member2);
+        em.flush();
+        em.clear();
+
+        //when
+        //Probe
+        Member exampleMember = new Member("member1");
+
+        ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreCase("age");
+        Example<Member> memberExample = Example.of(exampleMember,matcher);
+
+        List<Member> memberList = memberRepository.findAll(memberExample);
+        //then
+        Assertions.assertThat(memberList.get(0).getUserName()).isEqualTo(member1.getUserName());
+
+    }
+
+    /**
+     * 장점: 동적 쿼리를 편리하게 처리 가능
+     * 도메인 객체를 그대로 사용
+     * DB를 변경해도 상관없음
+     *
+     * 단점: inner join만 사용가능
+     * 중첨 제약조건은 안됨 (ex: firstName = ? and lastname = ?)
+     * 매칭 조건이 매우 단순함.
+     **/
+
+    @Test
+    @DisplayName("interface based projections")
+    void projections() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamA);
+        em.persist(member1);
+        em.persist(member2);
+        em.flush();
+        em.clear();
+
+        //when
+        List<UserNameOnly> interfaceMembers = memberRepository.findInterfaceBasedProjectionsByUserName("member1");
+        List<UserNameOnlyDto> classMembers = memberRepository.findClassBasedProjectionsByUserName("member1");
+        List<UserNameOnlyDto> classTypeProjectionMember = memberRepository.findClassBasedWithTypeProjectionsByUserName("member1", UserNameOnlyDto.class);
+        List<NestedClosedProjections> nestedClosedProjections = memberRepository.findClassBasedWithTypeProjectionsByUserName("member1", NestedClosedProjections.class);
+
+        //then
+        for (UserNameOnly userNameOnly : interfaceMembers) {
+            System.out.println("interface userNameOnly = " + userNameOnly.getUserName());
+        }
+        for (UserNameOnlyDto userNameOnly : classMembers) {
+            System.out.println("class userNameOnly = " + userNameOnly.getUserName());
+        }
+        for (UserNameOnlyDto userNameOnly : classTypeProjectionMember) {
+            System.out.println("class userNameOnly = " + userNameOnly.getUserName());
+        }
+        for (NestedClosedProjections nestedClosedProjection : nestedClosedProjections) {
+            System.out.println("nested userNameOnly = " + nestedClosedProjection.getUserName());
+            System.out.println("nestedClosedProjection = " + nestedClosedProjection.getTeam());
+        }
+    }
+    /**
+     * interface 기반의 projection
+     * entity대신에 dto로 바로 조회하는 방법
+     * close projection을 사용하면 일치하는 column만 가져올 수 있으며,
+     * open projection을 사용하면 내가 원하는 컬럼을 원하는 형태로 가져올 수 있다.
+     * 주의할 점은 getter 함수를 만들때 column과 일치시켜야 가져올 수 있다.
+     *
+     * 중첩구조로 사용하는 경우 최적화 문제가 있음으로
+     * root(username)로 조회하는 컬럼은 정상적으로 가져올 수 있는다
+     * 그 외의 데이터는 모든 데이터를 가져와 사용하는 방식이다.
+     **/
+
+    @Test
+    @DisplayName("native query")
+    void nativeQueryTest() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamA);
+        em.persist(member1);
+        em.persist(member2);
+        em.flush();
+        em.clear();
+
+        //when
+        Member member = memberRepository.findByNativeQuery("member1");
+        //then
+
+        Assertions.assertThat(member.getUserName()).isEqualTo(member1.getUserName());
+    }
+
+    @Test
+    @DisplayName("Native query with projection")
+    void nativeQueryWithProjection() throws Exception {
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamA);
+        em.persist(member1);
+        em.persist(member2);
+        em.flush();
+        em.clear();
+
+        //when
+        Page<MemberProjection> byNativeProjection = memberRepository.findByNativeProjection(PageRequest.of(0, 3));
+        System.out.println("byNativeProjection = " + byNativeProjection);
+        //then
+    }
 }

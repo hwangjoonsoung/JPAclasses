@@ -1,17 +1,16 @@
 package study.datajpa.repository;
 
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
 import org.hibernate.annotations.processing.SQL;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import study.datajpa.dto.MemberDto;
+import study.datajpa.dto.MemberProjection;
+import study.datajpa.dto.UserNameOnlyDto;
 import study.datajpa.entity.Member;
 
 import java.nio.channels.Pipe;
@@ -20,7 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom, JpaSpecificationExecutor<Member>{
 
     //query method
     List<Member> findByUserName(String username);
@@ -58,4 +57,27 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query(value = "update Member m set m.age = m.age+1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
 
+    @Query("select m from Member m join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly" , value = "true"))
+    Member findReadOnlyByUserName(@Param("username") String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUserName(String username);
+
+    List<UserNameOnly> findInterfaceBasedProjectionsByUserName(@Param("userName") String userName);
+    List<UserNameOnlyDto> findClassBasedProjectionsByUserName(@Param("userName") String userName);
+    <T> List<T> findClassBasedWithTypeProjectionsByUserName(@Param("userName") String userName,Class<T> type);
+
+    @Query(value = "select * from member where user_name = ?", nativeQuery = true)
+    Member findByNativeQuery(String userName);
+
+    @Query(value = "select m.member_id as id, m.user_name as userName, t.name as teamName from member m left join team t"
+    ,countQuery = "select count(*) from member", nativeQuery = true)
+    Page<MemberProjection> findByNativeProjection(Pageable pageable);
 }
