@@ -46,6 +46,7 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
 // QClass가 생성될 경로 설정
 def querydslDir = "$buildDir/generated/querydsl"
 

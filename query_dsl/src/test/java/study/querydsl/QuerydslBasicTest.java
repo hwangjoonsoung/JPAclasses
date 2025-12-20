@@ -1,10 +1,15 @@
 package study.querydsl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -14,7 +19,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
+import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
+import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
 import study.querydsl.entity.Team;
@@ -71,10 +80,10 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    @DisplayName("transfer jpql to querydsl ")
+    @DisplayName("transfer jpql to querydsl")
     void transferJpqlToQuerydsl() throws Exception {
         //given
-        String username = "member12";
+        String username = "member1";
         //when
         QMember m = new QMember(username);
 
@@ -136,9 +145,9 @@ public class QuerydslBasicTest {
     @Test
     @DisplayName("resultFetch")
     void resultFetch() throws Exception {
-        List<Member> fetch = queryFactory.selectFrom(member).fetch();
-        Member fetchOne = queryFactory.selectFrom(member).fetchOne();
-        Member fetchFirst = queryFactory.selectFrom(member).fetchFirst();
+//        List<Member> fetch = queryFactory.selectFrom(member).fetch();
+//        Member fetchOne = queryFactory.selectFrom(member).fetchOne();
+//        Member fetchFirst = queryFactory.selectFrom(member).fetchFirst();
         QueryResults<Member> results = queryFactory.selectFrom(member).fetchResults();
         results.getTotal();
         results.getOffset();
@@ -472,4 +481,276 @@ public class QuerydslBasicTest {
     /**
      * stringValue를 사용하면 string으로 return가능
      **/
+
+    @Test
+    @DisplayName("projection one target")
+    void projectionOneTarget() throws Exception {
+        //when
+        List<String> username = queryFactory.select(member.username).from(member).fetch();
+        List<Member> fetch = queryFactory.select(member).from(member).fetch();
+        //then
+        System.out.println(username);
+        System.out.println(fetch);
+    }
+
+    @Test
+    @DisplayName("tuple projection")
+    void tupleProjection() throws Exception {
+        //when
+        List<Tuple> fetch = queryFactory.select(member.username,member.age).from(member).fetch();
+
+        //then
+        for (Tuple tuple : fetch) {
+            String username = tuple.get(member.username);
+            Integer age = tuple.get(member.age);
+            System.out.println(username);
+            System.out.println(age);
+        }
+    }
+    /**
+     * repository layer에서만 사용할 수 있도록 한다. 다른 layer가 jpa나 query dsl를 아는건 좋은 설계가 아님
+     * 따라서 service로 던져야 하는 경우 dto로 변환해서 던지는 것을 추천한다.
+     **/
+
+    @Test
+    @DisplayName("projection result convert dto using property")
+    void projectionResultConvertDtoUsingProperty() throws Exception {
+        //when
+        List<MemberDto> fetch = queryFactory.select(Projections.bean(MemberDto.class, member.username, member.age))
+                .from(member).fetch();
+
+        //then
+        System.out.println("fetch = " + fetch);
+    }
+
+    @Test
+    @DisplayName("projection result convert dto using filed")
+    void projectionResultConvertDtoUsingFiled() throws Exception {
+        //when
+        List<MemberDto> fetch = queryFactory.select(Projections.fields(MemberDto.class, member.username, member.age))
+                .from(member).fetch();
+
+        //then
+        System.out.println("fetch = " + fetch);
+    }
+    /**
+     * filed를 사용하면 setter를 통해서 바로 입력된다.
+     **/
+
+    @Test
+    @DisplayName("projection result convert dto using constructor")
+    void projectionResultConvertDtoUsingConstructor() throws Exception {
+        //when
+        List<UserDto> fetch = queryFactory.select(Projections.constructor(UserDto.class, member.username, member.age))
+                .from(member).fetch();
+
+        //then
+        System.out.println("fetch = " + fetch);
+    }
+
+    @Test
+    @DisplayName("projection result convert dto using filed user")
+    void projectionResultConvertDtoUsingFiledUser() throws Exception {
+        //when
+        List<UserDto> fetch = queryFactory.select(Projections.fields(UserDto.class, member.username.as("name"), member.age))
+                .from(member).fetch();
+
+        //then
+        System.out.println("fetch = " + fetch);
+    }
+    /**
+     * filed 변수가 일치하지 않는 경우 초기화로 입력된다.
+     * .as()를 통해 변수 매핑가능함
+     **/
+
+
+    @Test
+    @DisplayName("projection result convert dto using filed user expression")
+    void projectionResultConvertDtoUsingFiledUserExpression() throws Exception {
+        //when
+        QMember memberSub = new QMember("memberSub");
+        List<UserDto> fetch = queryFactory
+                .select(Projections
+                        .fields(UserDto.class, member.username.as("name"),
+                                ExpressionUtils.as(JPAExpressions.select(memberSub.age.max()).from(memberSub),"age")))
+                .from(member).fetch();
+
+        //then
+        System.out.println("fetch = " + fetch);
+    }
+
+
+    @Test
+    @DisplayName("findDtoByQueryProjection")
+    void fundDtoQueryProjection() throws Exception {
+        List<MemberDto> fetch = queryFactory.select(new QMemberDto(member.username, member.age)).from(member).fetch();
+        //then
+        for (MemberDto memberDto : fetch) {
+            System.out.println(memberDto);
+        }
+    }
+    /**
+     * dto를 Q file로 compile하는 방법
+     * dto에 @QueryProjection을 생성자 위에 적용하면 된다 MemberDto.class 참고)
+     * 사용하면 생성자 기반으로 Q file을 만들어 줌으로 정형화 된 함수에 넣기만 하면 된다.
+     *
+     * projection constructor를 사용하면 파라미터가 정형화 되어 있지 않기 때문에 uncheckedException을 발생한다.
+     * 하지만 @QueryProjection을 이용하면 checkedException을 발생함으로 컴파일 이전에 발견할 수 있다.
+     * 문제는 querydsl에 의존성을 가지기 때문에 여러 layer에 사용하기에는 제약조건이 발생할 가능성이 있다.
+     **/
+
+    @Test
+    @DisplayName("boolean builder")
+    void booleanBuilder() throws Exception {
+        //when
+        String usernameParam = "member1";
+        Integer ageParam = null;
+
+        List<Member> result=  searchMember1(usernameParam, ageParam);
+        //thenR
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember1(String usernameParam, Integer ageParam) {
+        BooleanBuilder builder = new BooleanBuilder();
+        if (usernameParam != null) {
+            builder.and(member.username.eq(usernameParam));
+        }
+        if (ageParam != null) {
+            builder.and(member.age.eq(ageParam));
+        }
+
+        return queryFactory.select(member).from(member).where(builder).fetch();
+    }
+    /**
+     * booleanBuilder를 통해서 동적쿼리를 생성할 수 있다.
+     **/
+    
+    @Test
+    @DisplayName("where multi param")
+    void multiParam() throws Exception {
+        //when
+        String usernameParam = "member1";
+        Integer ageParam = null;
+
+        List<Member> result=  searchMember2(usernameParam, ageParam);
+        for (Member member1 : result) {
+            System.out.println(member1);
+        }
+        //thenR
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember2(String usernameCondition, Integer ageCondition) {
+//        return queryFactory.select(member).from(member).where(usernameEq(usernameCondition),ageEq(ageCondition)).fetch();
+        return queryFactory.select(member).from(member).where(allParam(usernameCondition , ageCondition)).fetch();
+    }
+
+    private Predicate usernameEq(String usernameCondition) {
+        if (usernameCondition != null) {
+            return member.username.eq(usernameCondition);
+        } else {
+            return null;
+        }
+    }
+
+    private Predicate ageEq(Integer ageCondition) {
+        if (ageCondition != null) {
+            return member.age.eq(ageCondition);
+        } else {
+            return null;
+        }
+    }
+
+    private BooleanExpression usernameEqBooleanExpression(String usernameCondition) {
+        if (usernameCondition != null) {
+            return member.username.eq(usernameCondition);
+        } else {
+            return null;
+        }
+    }
+
+    private BooleanExpression ageEqBooleanExpression(Integer ageCondition) {
+        if (ageCondition != null) {
+            return member.age.eq(ageCondition);
+        } else {
+            return null;
+        }
+    }
+
+    private BooleanExpression allParam(String usernameCondition, Integer ageCondition) {
+        return usernameEqBooleanExpression(usernameCondition).and(ageEqBooleanExpression(ageCondition));
+    }
+    /**
+     * where 조건에 null이 입력되면 무시한다
+     * 이를 이용해서 where 조건에 들어갈 함수를 만들어 사용할 수 있다
+     * 이거를 응욯하면 BooleanExpression을 사용할 수 있는데.
+     * 이렇게 되면 쿼리에 대한 가독성이 높아진다.
+     **/
+
+    @Test
+    @DisplayName("bulk update")
+    void bulkUpdate() throws Exception {
+        //then
+        List<Member> beforeUpdateExecute = queryFactory.select(member).from(member).fetch();
+        for (Member fetch1 : beforeUpdateExecute) {
+            System.out.println("before: " + fetch1);
+        }
+        //when
+        long count = queryFactory.update(member).set(member.username, "비회원").where(member.age.lt(28)).execute();
+        em.flush();
+        em.clear();
+
+        //then
+        List<Member> afterUpdateExecute = queryFactory.select(member).from(member).fetch();
+        for (Member fetch1 : afterUpdateExecute) {
+            System.out.println("after: "+fetch1);
+        }
+    }
+    /**
+     *  bulk update할때는 persist context를 유의해야 한다.
+     *  update이전에 select를 하고 update를 한 뒤 다시 select하면 1차 캐시에서 가져오는 문제가 있다.
+     *  따라서 해당 부분은 persist context를 날랴주는 것이 좋다.
+     **/
+
+    @Test
+    @DisplayName("bulk add")
+    void bulkAdd() throws Exception {
+        //when
+        queryFactory.update(member).set(member.age, member.age.add(-1)).execute();
+
+        //then
+    }
+
+    @Test
+    @DisplayName("bulk delete")
+    void bulkDelete() throws Exception {
+        //when
+        queryFactory.delete(member).where(member.age.gt(31)).execute();
+        //then
+    }
+
+    @Test
+    @DisplayName("sql Function")
+    @Commit
+    void sqlFunction() throws Exception {
+        //when
+        List<String> fetch = queryFactory.select(
+                Expressions.stringTemplate("function('replace',{0},{1},{2})",
+                        member.username, "member", "m")
+        ).from(member).fetch();
+        for (String s : fetch) {
+            System.out.println(s);
+        }
+    }
+
+    @Test
+    @DisplayName("sql function2")
+    void sqlFunction2() throws Exception {
+        //when
+//        List<String> fetch = queryFactory.select(member.username).from(member).where(member.username.eq(Expressions.stringTemplate("function('lower',{0})", member.username))).fetch();
+        List<String> fetch = queryFactory.select(member.username).from(member).where(member.username.eq(member.username.lower())).fetch(); //표준 함수는 내장되어 있음
+        //then
+        System.out.println(fetch);
+    }
 }
