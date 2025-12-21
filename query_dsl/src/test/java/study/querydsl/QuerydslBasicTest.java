@@ -14,11 +14,13 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceUnit;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
@@ -60,6 +62,13 @@ public class QuerydslBasicTest {
         em.persist(member3);
         em.persist(member4);
         //when
+        em.flush();
+        em.clear();
+    }
+
+    @AfterEach
+    public void afterEach(){
+        queryFactory.delete(member).execute();
         em.flush();
         em.clear();
     }
