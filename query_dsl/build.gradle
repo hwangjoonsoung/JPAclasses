@@ -65,5 +65,5 @@ clean {
     delete file(querydslDir)
 }
 test {
-    enabled = false
+    enabled = true
 }

@@ -10,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.Team;
 
-import java.nio.channels.Pipe;
-
 @Profile("local")
 @Component
 @RequiredArgsConstructor
@@ -19,7 +17,7 @@ public class InitMember {
 
     private final InitMemberService initMemberService;
 
-    @PostConstruct
+//    @PostConstruct
     public void init(){
         initMemberService.init();
     }
